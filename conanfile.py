@@ -16,9 +16,11 @@ class grpcConan(ConanFile):
     short_paths = True
 
     settings = "os", "arch", "compiler", "build_type"
-    # TODO: Add shared option
+    # TODO: Add deps_source_package option to support grpc dependencies as module and to forward compiler.cppstd and other settings to dependencies
     options = {
+        "shared": [True, False],
         "fPIC": [True, False],
+    #    "deps_source_package": [True, False], 
         "build_codegen": [True, False],
         "build_csharp_ext": [True, False],
         "build_cpp_plugin": [True, False],
@@ -30,7 +32,9 @@ class grpcConan(ConanFile):
         "build_ruby_plugin": [True, False]
     }
     default_options = {
+        "shared":  False,
         "fPIC": True,
+    #    "deps_source_package": True,
         "build_codegen": True,
         "build_csharp_ext": False,
         "build_cpp_plugin": True,
@@ -80,7 +84,8 @@ class grpcConan(ConanFile):
         #   enable_mobile=False # Enables iOS and Android support
         #
         # cmake.definitions["CONAN_ENABLE_MOBILE"] = "ON" if self.options.build_csharp_ext else "OFF"
-
+        
+        cmake.definitions["BUILD_SHARED_LIBS"] = "ON" if self.options.shared else "OFF"
 
         cmake.definitions["gRPC_BUILD_CODEGEN"] = "ON" if self.options.build_codegen else "OFF"
         cmake.definitions["gRPC_BUILD_CSHARP_EXT"] = "ON" if self.options.build_csharp_ext else "OFF"
@@ -91,12 +96,13 @@ class grpcConan(ConanFile):
         # cmake.definitions["CMAKE_INSTALL_PREFIX"] = self._build_subfolder
 
         # tell grpc to use the find_package versions
-        cmake.definitions["gRPC_ABSL_PROVIDER"] = "package"
-        cmake.definitions["gRPC_CARES_PROVIDER"] = "package"
-        cmake.definitions["gRPC_ZLIB_PROVIDER"] = "package"
-        cmake.definitions["gRPC_SSL_PROVIDER"] = "package"
-        cmake.definitions["gRPC_PROTOBUF_PROVIDER"] = "package"
-        cmake.definitions["gRPC_RE2_PROVIDER"] = "package"
+        # the module version fails with gRPC_ABSL_PROVIDER is "module" but ABSL_ROOT_DIR is wrong
+        cmake.definitions["gRPC_ABSL_PROVIDER"] = "package" # if self.options.deps_source_package else "module"
+        cmake.definitions["gRPC_CARES_PROVIDER"] = "package" #if self.options.deps_source_package else "module"
+        cmake.definitions["gRPC_ZLIB_PROVIDER"] = "package" #if self.options.deps_source_package else "module"
+        cmake.definitions["gRPC_SSL_PROVIDER"] = "package" #if self.options.deps_source_package else "module"
+        cmake.definitions["gRPC_PROTOBUF_PROVIDER"] = "package" #if self.options.deps_source_package else "module"
+        cmake.definitions["gRPC_RE2_PROVIDER"] = "package" #if self.options.deps_source_package else "module"
 
         cmake.definitions["gRPC_BUILD_GRPC_CPP_PLUGIN"] = self.options.build_cpp_plugin
         cmake.definitions["gRPC_BUILD_GRPC_CSHARP_PLUGIN"] = self.options.build_csharp_plugin
