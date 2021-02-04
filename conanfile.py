@@ -20,7 +20,6 @@ class grpcConan(ConanFile):
     options = {
         "shared": [True, False],
         "fPIC": [True, False],
-    #    "deps_source_package": [True, False], 
         "build_codegen": [True, False],
         "build_csharp_ext": [True, False],
         "build_cpp_plugin": [True, False],
@@ -34,7 +33,6 @@ class grpcConan(ConanFile):
     default_options = {
         "shared":  False,
         "fPIC": True,
-    #    "deps_source_package": True,
         "build_codegen": True,
         "build_csharp_ext": False,
         "build_cpp_plugin": True,
@@ -49,15 +47,15 @@ class grpcConan(ConanFile):
     _source_subfolder = "source_subfolder"
     _build_subfolder = "build_subfolder"
 
-    requires = (
-        "zlib/1.2.11",
-        "openssl/1.1.1h",
-        "protobuf/3.13.0",
-        "c-ares/1.15.0",
-        "abseil/20200225.3",
-        "re2/20201101"
-    )
-
+    def requirements(self):
+        if not self.options.shared:
+            self.requires ("zlib/1.2.11")
+            self.requires ("openssl/1.1.1h")
+            self.requires ("protobuf/3.13.0")
+            self.requires ("c-ares/1.15.0")
+            self.requires ("abseil/20200225.3")
+            self.requires ("re2/20201101")
+   
     def configure(self):
         if self.settings.os == "Windows" and self.settings.compiler == "Visual Studio":
             del self.options.fPIC
@@ -66,14 +64,16 @@ class grpcConan(ConanFile):
                 raise ConanInvalidConfiguration("gRPC can only be built with Visual Studio 2015 or higher.")
 
     def source(self):
-        tools.get(**self.conan_data["sources"][self.version])
-        extracted_dir = self.name + "-" + self.version
-        os.rename(extracted_dir, self._source_subfolder)
-
-        cmake_path = os.path.join(self._source_subfolder, "CMakeLists.txt")
-
-        # See #5
-        tools.replace_in_file(cmake_path, "_gRPC_PROTOBUF_LIBRARIES", "CONAN_LIBS_PROTOBUF")
+        if self.options.shared:
+            self.run("git clone  --recurse-submodules -b v" + self.version + " https://github.com/grpc/grpc " + self._source_subfolder)
+            cmake_path = os.path.join(self._source_subfolder, "CMakeLists.txt")
+        else:
+            tools.get(**self.conan_data["sources"][self.version])
+            extracted_dir = self.name + "-" + self.version
+            os.rename(extracted_dir, self._source_subfolder)
+            cmake_path = os.path.join(self._source_subfolder, "CMakeLists.txt")
+            # See #5
+            tools.replace_in_file(cmake_path, "_gRPC_PROTOBUF_LIBRARIES", "CONAN_LIBS_PROTOBUF")
 
     def _configure_cmake(self):
         cmake = CMake(self)
@@ -97,12 +97,12 @@ class grpcConan(ConanFile):
 
         # tell grpc to use the find_package versions
         # the module version fails with gRPC_ABSL_PROVIDER is "module" but ABSL_ROOT_DIR is wrong
-        cmake.definitions["gRPC_ABSL_PROVIDER"] = "package" # if self.options.deps_source_package else "module"
-        cmake.definitions["gRPC_CARES_PROVIDER"] = "package" #if self.options.deps_source_package else "module"
-        cmake.definitions["gRPC_ZLIB_PROVIDER"] = "package" #if self.options.deps_source_package else "module"
-        cmake.definitions["gRPC_SSL_PROVIDER"] = "package" #if self.options.deps_source_package else "module"
-        cmake.definitions["gRPC_PROTOBUF_PROVIDER"] = "package" #if self.options.deps_source_package else "module"
-        cmake.definitions["gRPC_RE2_PROVIDER"] = "package" #if self.options.deps_source_package else "module"
+        cmake.definitions["gRPC_ABSL_PROVIDER"] = "module" if self.options.shared else "package"
+        cmake.definitions["gRPC_CARES_PROVIDER"] = "module" if self.options.shared else "package"
+        cmake.definitions["gRPC_ZLIB_PROVIDER"] = "module" if self.options.shared else "package"
+        cmake.definitions["gRPC_SSL_PROVIDER"] = "module" if self.options.shared else "package"
+        cmake.definitions["gRPC_PROTOBUF_PROVIDER"] = "module" if self.options.shared else "package"
+        cmake.definitions["gRPC_RE2_PROVIDER"] = "module" if self.options.shared else "package"
 
         cmake.definitions["gRPC_BUILD_GRPC_CPP_PLUGIN"] = self.options.build_cpp_plugin
         cmake.definitions["gRPC_BUILD_GRPC_CSHARP_PLUGIN"] = self.options.build_csharp_plugin
