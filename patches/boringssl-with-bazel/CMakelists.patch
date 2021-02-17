@@ -1,0 +1,11 @@
+--- a/third_party/boringssl-with-bazel/CMakeLists.txt	2021-02-04 18:47:01.000000000 +0100
++++ b/third_party/boringssl-with-bazel/CMakeLists.txt	2021-02-09 22:07:46.000000000 +0100
+@@ -640,6 +640,8 @@
+   src/tool/transport_common.cc
+ )
+ 
++target_link_libraries(ssl crypto)
++
+ target_link_libraries(bssl ssl crypto)
+ 
+ if(NOT WIN32 AND NOT ANDROID)

@@ -44,6 +44,7 @@ class grpcConan(ConanFile):
         "build_ruby_plugin": True,
     }
 
+    exports = ['patches/*']
     _source_subfolder = "source_subfolder"
     _build_subfolder = "build_subfolder"
 
@@ -67,6 +68,8 @@ class grpcConan(ConanFile):
         if self.options.shared:
             self.run("git clone  --recurse-submodules -b v" + self.version + " https://github.com/grpc/grpc " + self._source_subfolder)
             cmake_path = os.path.join(self._source_subfolder, "CMakeLists.txt")
+            for patch in self.conan_data["patches"].get(self.version, []):
+                tools.patch(**patch)
         else:
             tools.get(**self.conan_data["sources"][self.version])
             extracted_dir = self.name + "-" + self.version
@@ -123,6 +126,8 @@ class grpcConan(ConanFile):
         return cmake
 
     def build(self):
+ #       for patch in self.conan_data["patches"].get(self.version, []):
+ #           tools.patch(**patch)
         cmake = self._configure_cmake()
         cmake.build()
 
@@ -142,20 +147,71 @@ class grpcConan(ConanFile):
 
         self.cpp_info.names["cmake_find_package"] = "gRPC"
         self.cpp_info.names["cmake_find_package_multi"] = "gRPC"
+        if not self.options.shared:
+            self.cpp_info.libs = [
+                "grpc++_unsecure",
+                "grpc++_reflection",
+                "grpc++_error_details",
+                "grpc++",
+                "grpc_unsecure",
+                "grpc_plugin_support",
+                "grpcpp_channelz",
+                "grpc",
+                "gpr",
+                "address_sorting",
+                "upb",
+            ]
+        else:
+            self.cpp_info.libs = [
+                "grpc++_unsecure",
+                "grpc++_reflection",
+                "grpc++_error_details",
+                "grpc++",
+                "grpc_unsecure",
+                "grpc_plugin_support",
+                "grpcpp_channelz",
+                "grpc",
+                "protobuf",
+                "address_sorting",
+                "re2",
+                "upb",
+                "cares",
+                "z",
+                "absl_raw_hash_set",
+                "absl_hashtablez_sampler",
+                "absl_exponential_biased",
+                "absl_hash",
+                "absl_bad_variant_access",
+                "absl_city",
+                "absl_status",
+                "absl_cord",
+                "absl_bad_optional_access",
+                "absl_str_format_internal",
+                "absl_synchronization",
+                "absl_graphcycles_internal",
+                "absl_symbolize",
+                "absl_demangle_internal",
+                "absl_stacktrace",
+                "absl_debugging_internal",
+                "absl_malloc_internal",
+                "absl_time",
+                "absl_time_zone",
+                "absl_civil_time",
+                "absl_strings",
+                "absl_strings_internal",
+                "absl_throw_delegate",
+                "absl_int128",
+                "absl_base",
+                "absl_spinlock_wait",
+                "absl_raw_logging_internal",
+                "absl_log_severity",
+                "absl_dynamic_annotations",
+                "ssl",
+                "crypto",
+                "gpr",
+                "pthread",
+            ]
 
-        self.cpp_info.libs = [
-            "grpc++_unsecure",
-            "grpc++_reflection",
-            "grpc++_error_details",
-            "grpc++",
-            "grpc_unsecure",
-            "grpc_plugin_support",
-            "grpcpp_channelz",
-            "grpc",
-            "gpr",
-            "address_sorting",
-            "upb",
-        ]
 
         if self.settings.os == "Windows":
             self.cpp_info.system_libs = ["wsock32", "ws2_32", "crypt32"]
