@@ -115,6 +115,8 @@ class grpcConan(ConanFile):
         cmake.definitions["gRPC_BUILD_GRPC_PYTHON_PLUGIN"] = self.options.build_python_plugin
         cmake.definitions["gRPC_BUILD_GRPC_RUBY_PLUGIN"] = self.options.build_ruby_plugin
 
+        cmake.definitions["protobuf_DEBUG_POSTFIX"] = ""
+
         # see https://github.com/inexorgame/conan-grpc/issues/39
         if self.settings.os == "Windows":
             if not self.options["protobuf"].shared:
@@ -205,7 +207,6 @@ class grpcConan(ConanFile):
                 "absl_spinlock_wait",
                 "absl_raw_logging_internal",
                 "absl_log_severity",
-                "absl_dynamic_annotations",
                 "ssl",
                 "crypto",
                 "gpr",
