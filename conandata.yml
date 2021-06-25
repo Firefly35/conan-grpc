@@ -1,7 +1,10 @@
 patches:
+  "1.37.0":
+  - base_path: source_subfolder
+    patch_file: patches/boringssl-with-bazel/CMakeLists.1.37.0.patch
   "1.34.1":
   - base_path: source_subfolder
-    patch_file: patches/boringssl-with-bazel/CMakelists.patch
+    patch_file: patches/boringssl-with-bazel/CMakeLists.1.34.1.patch
 sources:
   "1.25.0":
     url: https://github.com/grpc/grpc/archive/v1.25.0.zip
